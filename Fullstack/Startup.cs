@@ -23,7 +23,7 @@ namespace PassHomework
         {
             services.AddHttpClient();
             services.AddSingleton<ICurrencyExchangeService, CurrencyExchangeService>();
-
+            services.AddMemoryCache();
             services.AddControllersWithViews();
             // In production, the Angular files will be served from this directory
             services.AddSpaStaticFiles(configuration =>

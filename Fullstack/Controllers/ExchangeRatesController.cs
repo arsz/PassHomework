@@ -1,5 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using PassHomework.Models;
 using PassHomework.Services.CurrencyExchange;
 
 namespace PassHomework.Controllers
@@ -9,10 +12,12 @@ namespace PassHomework.Controllers
     public class ExchangeRatesController : ControllerBase
     {
         private readonly ICurrencyExchangeService _currencyExchangeService;
+        private readonly IMemoryCache _memoryCache;
 
-        public ExchangeRatesController(ICurrencyExchangeService currencyExchangeService)
+        public ExchangeRatesController(ICurrencyExchangeService currencyExchangeService, IMemoryCache memoryCache)
         {
             _currencyExchangeService = currencyExchangeService;
+            _memoryCache = memoryCache;
         }
 
         [HttpGet]
@@ -21,14 +26,21 @@ namespace PassHomework.Controllers
             var exchangeRates = await _currencyExchangeService.GetLatestExchangeRates();
 
             return exchangeRates == null
-                ? (IActionResult) NotFound()
+                ? (IActionResult)NotFound()
                 : Ok(exchangeRates);
         }
+
 
         [HttpGet("{currency}")]
         public async Task<IActionResult> GetSelected(string currency)
         {
-            var basedExchangeRates = await _currencyExchangeService.GetExchangeRatesBySelected(currency);
+            ExchangeRates basedExchangeRates;
+
+            if (_memoryCache.TryGetValue(currency, out basedExchangeRates) == false)
+            {
+                basedExchangeRates = await _currencyExchangeService.GetExchangeRatesBySelected(currency);
+                _memoryCache.Set(currency, basedExchangeRates, new MemoryCacheEntryOptions() { AbsoluteExpiration = DateTime.UtcNow.AddHours(1) });
+            }
 
             return basedExchangeRates == null
                 ? (IActionResult)NotFound()
