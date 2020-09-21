@@ -6,5 +6,7 @@ namespace PassHomework.Services.CurrencyExchange
     public interface ICurrencyExchangeService
     {
         Task<ExchangeRates> GetLatestExchangeRates();
+
+        Task<ExchangeRates> GetExchangeRatesBySelected(string currency);
     }
 }

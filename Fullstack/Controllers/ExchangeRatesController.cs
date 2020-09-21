@@ -24,5 +24,15 @@ namespace PassHomework.Controllers
                 ? (IActionResult) NotFound()
                 : Ok(exchangeRates);
         }
+
+        [HttpGet("{currency}")]
+        public async Task<IActionResult> GetSelected(string currency)
+        {
+            var basedExchangeRates = await _currencyExchangeService.GetExchangeRatesBySelected(currency);
+
+            return basedExchangeRates == null
+                ? (IActionResult)NotFound()
+                : Ok(basedExchangeRates);
+        }
     }
 }

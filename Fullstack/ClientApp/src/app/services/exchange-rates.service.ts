@@ -11,4 +11,9 @@ export class ExchangeRatesService {
   getLatestExchangeRates(): Observable<ExchangeRates> {
     return this.http.get<ExchangeRatesDTO>('exchangerates').pipe(map(dto => new ExchangeRates(dto)));
   }
+
+
+  getExchangeRatesBySelectedCurrency(currency: string): Observable<ExchangeRates> {
+    return this.http.get<ExchangeRatesDTO>(`/ExchangeRates/${currency}`).pipe(map(dto => new ExchangeRates(dto)));
+  }
 }

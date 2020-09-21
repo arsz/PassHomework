@@ -15,6 +15,8 @@ namespace PassHomework.Services.CurrencyExchange
         private readonly ILogger<CurrencyExchangeService> _logger;
 
         private const string LatestExchangeRatesEndpoint = "https://api.exchangeratesapi.io/latest";
+        private const string BasedExchangeRatesEndpoint = "https://api.exchangeratesapi.io/latest?base={0}";
+
         private static readonly JsonSerializerOptions CamelCaseOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -28,27 +30,47 @@ namespace PassHomework.Services.CurrencyExchange
 
         public async Task<ExchangeRates> GetLatestExchangeRates()
         {
+            return await GetExchangeRates(LatestExchangeRatesEndpoint);
+        }
+
+        public async Task<ExchangeRates> GetExchangeRatesBySelected(string currency)
+        {
+            var basedExchangeRates = string.Format(BasedExchangeRatesEndpoint, currency);
+
+            return await GetExchangeRates(basedExchangeRates);
+        }
+
+        private async Task<ExchangeRates> GetExchangeRates(string url)
+        {
+
             using var client = _httpClientFactory.CreateClient();
 
-            var response = await client.GetAsync(LatestExchangeRatesEndpoint);
-
-            if (!response.IsSuccessStatusCode)
+            using (var response = await client.GetAsync(url))
             {
-                _logger.LogError($"Error calling '{LatestExchangeRatesEndpoint}'. StatusCode: {response.StatusCode}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError($"Error calling '{url}'. StatusCode: {response.StatusCode}");
 
-                return null;
-            }
-            var responseStream = await response.Content.ReadAsStreamAsync();
+                    return null;
+                }
 
-            try
-            {
-                return await JsonSerializer.DeserializeAsync<ExchangeRates>(responseStream, CamelCaseOptions);
-            }
-            catch (JsonException exception)
-            {
-                _logger.LogError(exception, $"Error deserializing JSON response of '{LatestExchangeRatesEndpoint}'");
+                var responseStream = await response.Content.ReadAsStreamAsync();
 
-                return null;
+
+                try
+                {
+                    return await JsonSerializer.DeserializeAsync<ExchangeRates>(responseStream, CamelCaseOptions);
+                }
+                catch (JsonException exception)
+                {
+                    _logger.LogError(exception, $"Error deserializing JSON response of '{url}'");
+
+                    return null;
+                }
+                finally
+                {
+                    await responseStream.DisposeAsync();
+                }
             }
         }
     }

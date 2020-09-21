@@ -2,3 +2,8 @@ td.mat-cell, th.mat-header-cell {
     padding-right: 24px;
     width: 50%;
 }
+
+.pointer {
+  cursor: pointer;
+}
+

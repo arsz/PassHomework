@@ -32,4 +32,14 @@ export class ExchangeRatesComponent implements OnInit {
       });
   }
 
+  cellClicked(currency) {
+    const subscription = this.exchangeRatesService.getExchangeRatesBySelectedCurrency(currency)
+      .pipe(finalize(() => subscription.unsubscribe()))
+      .subscribe((rates: ExchangeRates) => {
+        this.exchangeRates = rates;
+        this.tableDataSource = new MatTableDataSource(rates.rates);
+        this.tableDataSource.sort = this.sort;
+        this.tableDataSource.paginator = this.paginator;
+      });
+  }
 }
